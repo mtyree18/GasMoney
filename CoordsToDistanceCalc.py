@@ -4,22 +4,60 @@ import json
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 import pandas as pd
+import dropbox
+import os
 
 
-csv_filename = "CSVLog-20220623-132623.csv"
+csv_filename = "recent_trip.csv"
 json_filename = "points2.json"
+DROPBOX_ACCESS_TOKEN = "sl.BKTu1CSo7WUyXfjaboqzorSaED4EZzuWiXhsyTDmvPD" \
+                       "ZvwYc36xpUQHZESdTcpnRSAdsZQel2UMMLRTi_kcOnQLvmW" \
+                       "bqCwy8VVm31SIaMCYzmgM2TObq2ibKUiBu1LhYfUztWwJpckbq"
 
-# This deletes the first line of the file which when downloaded from the app
+
+# connect to dropbox
+def dropbox_connect():
+    dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+    return dbx
+
+
+# a function to retrieve the most recent csv file
+def dropbox_get_recent_csv():
+    # calling the connect to dropbox function
+    dbx = dropbox_connect()
+    recent = 0
+    # creating a for loop that loops through my dropbox files not in a folder
+    # (which is where they're stored by default when you upload the file). Because
+    # the files are automatically named with the date and time at the end of them,
+    # I check for the most recent date (largest number) and return the name of that file
+    for file in dbx.files_list_folder("").entries:
+        if int(file.name[7:21]) > recent:
+            recent = int(file.name[7:21])
+            recent_file_name = file.name
+    return recent_file_name
+
+
+# this function makes a new empty csv, and fills it with the content it downloads from
+# the dropbox file. That is the csv we use in the rest of the code to find total distance
+def dropbox_download_file():
+    dbx = dropbox_connect()
+    with open("recent_trip.csv", 'wb') as f:
+        metadata, res = dbx.files_download(path=f"/{dropbox_get_recent_csv()}")
+        f.write(res.content)
+
+
+# This deletes the first line of the csv which when downloaded from the app
 # is an unnecessary one that messes up the program
-with open(csv_filename, 'r+') as dl:
-    lines = dl.readlines()
-    if "#" in lines[0]:
-        dl.seek(0)
-        dl.truncate()
-        dl.writelines(lines[1:])
+def delete_unnecessary(csv_path):
+    with open(csv_path, 'r+') as dl:
+        lines = dl.readlines()
+        if "#" in lines[0]:
+            dl.seek(0)
+            dl.truncate()
+            dl.writelines(lines[1:])
 
 
-# this converts the csv to json, which I did so I could access lat and lon from a dictionary
+# this converts the csv to json, which I did so that I could access lat and lon from a dictionary
 def convert_json(csv_path, json_path):
     # establishing empty dictionary
     data = {}
@@ -91,6 +129,12 @@ def distance_to_cost(distance):
     return cost
 
 
+dropbox_connect()
+dropbox_get_recent_csv()
+dropbox_download_file()
+# deletes the unnecessary line at the beginning of the csv file that is automatically generated
+# by the obd2 reader
+delete_unnecessary(csv_filename)
 # calling the convert to json function
 convert_json(csv_filename, json_filename)
 # calling the distance calc function to convert the points to a total distance
@@ -99,8 +143,7 @@ distance_calc(json_filename)
 # is the distance calc function because that returns distance.
 print("$" + str(round(distance_to_cost(distance_calc(json_filename)), 2)))
 
-# my next step in this project is to automate the downloading of the file a little more, as
-# well as the running of the program. My vision is a website with a link you click, and it downloads
+# my next step in this project is to make a website with a link you click, and it downloads
 # the most recent trip file from the obd2 app and runs it in this program and gives you the cost.
 # What would be cool is to eventually have a good-looking website that has many functions
 # related to this idea. Possibly even a gauge you can put in your car that ticks up the amount the
