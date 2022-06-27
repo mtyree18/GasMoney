@@ -3,16 +3,15 @@ import csv
 import json
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
-import pandas as pd
 import dropbox
-import os
 
 
 csv_filename = "recent_trip.csv"
-json_filename = "points2.json"
-DROPBOX_ACCESS_TOKEN = "sl.BKTu1CSo7WUyXfjaboqzorSaED4EZzuWiXhsyTDmvPD" \
-                       "ZvwYc36xpUQHZESdTcpnRSAdsZQel2UMMLRTi_kcOnQLvmW" \
-                       "bqCwy8VVm31SIaMCYzmgM2TObq2ibKUiBu1LhYfUztWwJpckbq"
+json_filename = "points.json"
+DROPBOX_ACCESS_TOKEN = "sl.BKQysbk1dZQ6G1FCORVOQ4oEIbB5Co" \
+                       "nQyfuDjf1FPUjxp5-MnaoJYLHr8e7AVv-Eh" \
+                       "B5xSyP18e7ojHz4SKnrICXNYTHel2Lk96IY4Wv" \
+                       "2neDdp842vC5ktKi5gqVBpWhjluMyTqMerCq5"
 
 
 # connect to dropbox
